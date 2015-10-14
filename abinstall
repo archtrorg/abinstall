@@ -452,7 +452,49 @@ format_partitions(){
 install_archbang(){
   print_title "INSTALL SYSTEM"
   print_info ""
+  echo
+
+  # copy files from bypass to install device
+  echo "Installing please wait..."
+  rsync -a --progress /run/archiso/sfs/airootfs/ $DESTDIR/ 2>/tmp/inst_log
+
+  # add mirrorlist or modify post install?
+
+  # remove abinstall from openbox me
+  sed -i '/Install/,+2d' $DESTDIR/home/ablive/.config/openbox/menu.xml
+
+  # set xkeyboard map
+  #sed -i "s/us/${KEYMAP_XKB:0:2}/g" $DESTDIR/etc/X11/xorg.conf.d/01-keyboard-layout.conf
+
+  # add in password again for sudo
+  sed -i '/^%wheel/s/NOPASSWD://g' $DESTDIR/etc/sudoers
+  # set /home/ablive with user permissions
+  arch_chroot "chown ablive:users /home/ablive -R &> /dev/null"
+
+  # set up kernel for mkiniticpio
+  cp /run/archiso/bootmnt/arch/boot/${ARCHI}/vmlinuz ${DESTDIR}/boot/vmlinuz-linux
+
+  # put live driver into new install
+  cp /etc/X11/xorg.conf.d/20-gpudriver.conf ${DESTDIR}/etc/X11/xorg.conf.d/20-gpudriver.conf &>/dev/null
+
+  # copy over new mirrorlist
+  cp /etc/pacman.d/mirrorlist ${DESTDIR}/etc/pacman.d/mirrorlist
+
+  # Clean up new install
+  rm -f ${DESTDIR}/usr/bin/abinstall &> /dev/null
+  rm -rf ${DESTDIR}/vomi &> /dev/null
+
+  # clean out archiso files from install
+  find ${DESTDIR}/usr/lib/initcpio -name archiso* -type f -exec rm '{}' \;
+
+  # systemd
+  rm ${DESTDIR}/etc/systemd/system/default.target &> /dev/null
+  sed -i 's/volatile/auto/g' /${DESTDIR}/etc/systemd/journald.conf
+
 }
+#}}}
+
+
 #}}}
 #CONFIGURE KEYMAP {{{
 configure_keymap(){
@@ -463,7 +505,7 @@ configure_keymap(){
 #CONFIGURE FSTAB {{{
 configure_fstab(){
   print_title "FSTAB - https://wiki.archlinux.org/index.php/Fstab"
-  print_info "The /etc/fstab file contains static filesystem information. It defines how storage devices and partitions are to be mounted and integrated into the overall system. It is read by the mount command to determine which options to use when mounting a specific partition or partition."
+  print_info "The /etc/fstab file contains static filesystem information."
   if [[ ! -f ${MOUNTPOINT}/etc/fstab.aui ]]; then
     cp ${MOUNTPOINT}/etc/fstab ${MOUNTPOINT}/etc/fstab.aui
   else
