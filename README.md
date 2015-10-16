@@ -1,7 +1,9 @@
 # abinstall
 
 add user setup
-install rsync plus pv
-mirrorlist
 
-keyboard
+add pv create var for source /run/airootfs/sys blah blah....
+ 
+mirrorlist remove option (post install)
+
+keyboard layout setxkbmap or edit xorg file

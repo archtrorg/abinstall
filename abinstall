@@ -60,7 +60,6 @@ configure_mirrorlist(){
   local countries_code=("AU" "AT" "BY" "BE" "BR" "BG" "CA" "CL" "CN" "CO" "CZ" "DK" "EE" "FI" "FR" "DE" "GR" "HU" "IN" "IE" "IL" "IT" "JP" "KZ" "KR" "LV" "LU" "MK" "NL" "NC" "NZ" "NO" "PL" "PT" "RO" "RU" "RS" "SG" "SK" "ZA" "ES" "LK" "SE" "CH" "TW" "TR" "UA" "GB" "US" "UZ" "VN")
   local countries_name=("Australia" "Austria" "Belarus" "Belgium" "Brazil" "Bulgaria" "Canada" "Chile" "China" "Colombia" "Czech Republic" "Denmark" "Estonia" "Finland" "France" "Germany" "Greece" "Hungary" "India" "Ireland" "Israel" "Italy" "Japan" "Kazakhstan" "Korea" "Latvia" "Luxembourg" "Macedonia" "Netherlands" "New Caledonia" "New Zealand" "Norway" "Poland" "Portugal" "Romania" "Russian" "Serbia" "Singapore" "Slovakia" "South Africa" "Spain" "Sri Lanka" "Sweden" "Switzerland" "Taiwan" "Turkey" "Ukraine" "United Kingdom" "United States" "Uzbekistan" "Viet Nam")
   country_list(){
-    #`reflector --list-countries | sed 's/[0-9]//g' | sed 's/^/"/g' | sed 's/,.*//g' | sed 's/ *$//g'  | sed 's/$/"/g' | sed -e :a -e '$!N; s/\n/ /; ta'`
     PS3="$prompt1"
     echo "Select your country:"
     select country_name in "${countries_name[@]}"; do
@@ -79,29 +78,6 @@ configure_mirrorlist(){
     country_list
     read_input_text "Confirm country: $country_name"
   done
-
-  url="https://www.archlinux.org/mirrorlist/?country=${contry_code}&use_mirror_status=on"
-
-  tmpfile=$(mktemp --suffix=-mirrorlist)
-
-  # Get latest mirror list and save to tmpfile
-  curl -so ${tmpfile} ${url}
-  sed -i 's/^#Server/Server/g' ${tmpfile}
-
-  # Backup and replace current mirrorlist file (if new file is non-zero)
-  if [[ -s ${tmpfile} ]]; then
-   { echo " Backing up the original mirrorlist..."
-     mv -i /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.orig; } &&
-   { echo " Rotating the new list into place..."
-     mv -i ${tmpfile} /etc/pacman.d/mirrorlist; }
-  else
-    echo " Unable to update, could not download list."
-  fi
-  # better repo should go first
-  cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.tmp
-  rankmirrors /etc/pacman.d/mirrorlist.tmp > /etc/pacman.d/mirrorlist
-  rm /etc/pacman.d/mirrorlist.tmp
-  # allow global read access (required for non-root yaourt execution)
   chmod +r /etc/pacman.d/mirrorlist
   $EDITOR /etc/pacman.d/mirrorlist
 }
@@ -451,45 +427,45 @@ format_partitions(){
 #INSTALL ARCHBANG {{{
 install_archbang(){
   print_title "INSTALL SYSTEM"
-  print_info ""
+  print_info "Installing please wait..."
   echo
-
-  # copy files from bypass to install device
-  echo "Installing please wait..."
-  rsync -a --progress /run/archiso/sfs/airootfs/ $DESTDIR/ 2>/tmp/inst_log
+  # copy source to new install
+  AIROOTFS="/run/archiso/sys/airootfs/"
+  NOF=$(df -i ${AIROOTFS} | wc -l)
+  rsync -a --progress $AIROOTFS $MOUNTPOINT/ | pv -les $NOF 2>/tmp/inst_log
 
   # add mirrorlist or modify post install?
-
+  cp /etc/pacman.d/mirrorlist $MOUNTPOINT/etc/pacman.d
   # remove abinstall from openbox me
-  sed -i '/Install/,+2d' $DESTDIR/home/ablive/.config/openbox/menu.xml
+  sed -i '/Install/,+2d' $MOUNTPOINT/home/ablive/.config/openbox/menu.xml
 
   # set xkeyboard map
   #sed -i "s/us/${KEYMAP_XKB:0:2}/g" $DESTDIR/etc/X11/xorg.conf.d/01-keyboard-layout.conf
 
   # add in password again for sudo
-  sed -i '/^%wheel/s/NOPASSWD://g' $DESTDIR/etc/sudoers
+  sed -i '/^%wheel/s/NOPASSWD://g' $MOUNTPOINT/etc/sudoers
   # set /home/ablive with user permissions
   arch_chroot "chown ablive:users /home/ablive -R &> /dev/null"
 
   # set up kernel for mkiniticpio
-  cp /run/archiso/bootmnt/arch/boot/${ARCHI}/vmlinuz ${DESTDIR}/boot/vmlinuz-linux
+  cp /run/archiso/bootmnt/arch/boot/${ARCHI}/vmlinuz ${MOUNTPOINT}/boot/vmlinuz-linux
 
   # put live driver into new install
-  cp /etc/X11/xorg.conf.d/20-gpudriver.conf ${DESTDIR}/etc/X11/xorg.conf.d/20-gpudriver.conf &>/dev/null
+  cp /etc/X11/xorg.conf.d/20-gpudriver.conf ${MOUNTPOINT}/etc/X11/xorg.conf.d/20-gpudriver.conf &>/dev/null
 
   # copy over new mirrorlist
-  cp /etc/pacman.d/mirrorlist ${DESTDIR}/etc/pacman.d/mirrorlist
+  cp /etc/pacman.d/mirrorlist ${MOUNTPOINT}/etc/pacman.d/mirrorlist
 
   # Clean up new install
-  rm -f ${DESTDIR}/usr/bin/abinstall &> /dev/null
-  rm -rf ${DESTDIR}/vomi &> /dev/null
+  rm -f ${MOUNTPOINT}/usr/bin/abinstall &> /dev/null
+  rm -rf ${MOUNTPOINT}/vomi &> /dev/null
 
   # clean out archiso files from install
-  find ${DESTDIR}/usr/lib/initcpio -name archiso* -type f -exec rm '{}' \;
+  find ${MOUNTPOINT}/usr/lib/initcpio -name archiso* -type f -exec rm '{}' \;
 
   # systemd
-  rm ${DESTDIR}/etc/systemd/system/default.target &> /dev/null
-  sed -i 's/volatile/auto/g' /${DESTDIR}/etc/systemd/journald.conf
+  rm ${MOUNTPOINT}/etc/systemd/system/default.target &> /dev/null
+  sed -i 's/volatile/auto/g' /${MOUNTPOINT}/etc/systemd/journald.conf
 
 }
 #}}}
@@ -777,9 +753,30 @@ root_password(){
 
 # SETUP NEW USER {{{
 setup_user(){
- # new user here
-}
-#}}}
+  print_title "CREATE NEW USER"
+  echo
+#  cp ${MOUNTPOINT}/usr/bin/mvuser ${MOUNTPOINT}/root/mvuser
+#  arch_chroot "/root/mvuser"
+#  rm ${MOUNTPOINT}/root/mvuser
+#  rm ${MOUNTPOINT}/usr/bin/mvuser
+#  pause_function
+
+usr1="ablive"
+usr2="testuser"
+  echo "Type password for new user :"
+  arch_chroot passwd $usr1
+
+for i in $(find $MOUNTPOINT/home/$usr1/.??* -type f);do 
+    grep "$MOUNTPOINT/home/$usr1" $i >/dev/null && sed -i "s|home/$usr1|home/$usr2|g" $i
+done
+
+  sed -i "s/$usr1/$usr2/g" $MOUNTPOINT/etc/group
+  sed -i "s/$usr1/$usr2/g" $MOUNTPOINT/etc/gshadow
+  sed -i "s/$usr1/$usr2/g" $MOUNTPOINT/etc/passwd
+  sed -i "s/$usr1/$usr2/" $MOUNTPOINT/etc/shadow
+  mv $MOUNTPOINT/home/$usr1 $MOUNTPOINT/home/$usr2
+  chown -R $usr2:users $MOUNTPOINT/home/$usr
+  chgrp $usr2 /$MOUNTPOINT/home/$usr2
 
 #}}}
 #FINISH {{{
