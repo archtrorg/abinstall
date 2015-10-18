@@ -755,28 +755,10 @@ root_password(){
 setup_user(){
   print_title "CREATE NEW USER"
   echo
-#  cp ${MOUNTPOINT}/usr/bin/mvuser ${MOUNTPOINT}/root/mvuser
-#  arch_chroot "/root/mvuser"
-#  rm ${MOUNTPOINT}/root/mvuser
-#  rm ${MOUNTPOINT}/usr/bin/mvuser
-#  pause_function
-
-usr1="ablive"
-usr2="testuser"
-  echo "Type password for new user :"
-  arch_chroot passwd $usr1
-
-for i in $(find $MOUNTPOINT/home/$usr1/.??* -type f);do 
-    grep "$MOUNTPOINT/home/$usr1" $i >/dev/null && sed -i "s|home/$usr1|home/$usr2|g" $i
-done
-
-  sed -i "s/$usr1/$usr2/g" $MOUNTPOINT/etc/group
-  sed -i "s/$usr1/$usr2/g" $MOUNTPOINT/etc/gshadow
-  sed -i "s/$usr1/$usr2/g" $MOUNTPOINT/etc/passwd
-  sed -i "s/$usr1/$usr2/" $MOUNTPOINT/etc/shadow
-  mv $MOUNTPOINT/home/$usr1 $MOUNTPOINT/home/$usr2
-  chown -R $usr2:users $MOUNTPOINT/home/$usr
-  chgrp $usr2 /$MOUNTPOINT/home/$usr2
+  arch_chroot "/root/mvuser"
+  rm ${MOUNTPOINT}/root/mvuser
+  pause_function
+}
 
 #}}}
 #FINISH {{{
@@ -795,9 +777,7 @@ print_title "ArchBang installer"
 print_info "abinstall is a set of scripts to easily install ArchBang."
 pause_function
 check_boot_system
-check_connection
-check_trim
-pacman -Sy
+
 while true
 do
   print_title "ArchBang installer - www.archbang.org"
