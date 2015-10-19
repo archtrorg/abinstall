@@ -1,9 +1,15 @@
 # abinstall
 
-add user setup
+done add user setup
 
-add pv create var for source /run/airootfs/sys blah blah....
+done add pv create var for source /run/airootfs/sys blah blah....
  
-mirrorlist remove option (post install)
+done mirrorlist remove option (post install)
 
 keyboard layout setxkbmap or edit xorg file
+
+done create variable for wiki links....
+
+done remove mkinitcpio
+
+fstab? UUID

@@ -26,10 +26,12 @@ else
   exit 1
 fi
 
+WIKI="https://wiki.archlinux.org/index.php"
+
 #ARCHLINUX INSTALL SCRIPTS MODE {{{
 #SELECT KEYMAP {{{
 select_keymap(){
-  print_title "KEYMAP - https://wiki.archlinux.org/index.php/KEYMAP"
+  print_title "KEYMAP - ${WIKI}/KEYMAP"
   print_info "The KEYMAP variable is specified in the /etc/rc.conf file. It defines what keymap the keyboard is in the virtual consoles. Keytable files are provided by the kbd package."
   OPTION=n
   while [[ $OPTION != y ]]; do
@@ -55,33 +57,7 @@ select_editor(){
   done
 }
 #}}}
-#MIRRORLIST {{{
-configure_mirrorlist(){
-  local countries_code=("AU" "AT" "BY" "BE" "BR" "BG" "CA" "CL" "CN" "CO" "CZ" "DK" "EE" "FI" "FR" "DE" "GR" "HU" "IN" "IE" "IL" "IT" "JP" "KZ" "KR" "LV" "LU" "MK" "NL" "NC" "NZ" "NO" "PL" "PT" "RO" "RU" "RS" "SG" "SK" "ZA" "ES" "LK" "SE" "CH" "TW" "TR" "UA" "GB" "US" "UZ" "VN")
-  local countries_name=("Australia" "Austria" "Belarus" "Belgium" "Brazil" "Bulgaria" "Canada" "Chile" "China" "Colombia" "Czech Republic" "Denmark" "Estonia" "Finland" "France" "Germany" "Greece" "Hungary" "India" "Ireland" "Israel" "Italy" "Japan" "Kazakhstan" "Korea" "Latvia" "Luxembourg" "Macedonia" "Netherlands" "New Caledonia" "New Zealand" "Norway" "Poland" "Portugal" "Romania" "Russian" "Serbia" "Singapore" "Slovakia" "South Africa" "Spain" "Sri Lanka" "Sweden" "Switzerland" "Taiwan" "Turkey" "Ukraine" "United Kingdom" "United States" "Uzbekistan" "Viet Nam")
-  country_list(){
-    PS3="$prompt1"
-    echo "Select your country:"
-    select country_name in "${countries_name[@]}"; do
-      if contains_element "$country_name" "${countries_name[@]}"; then
-        contry_code=${countries_code[$(( $REPLY - 1 ))]}
-        break
-      else
-        invalid_option
-      fi
-    done
-  }
-  print_title "MIRRORLIST - https://wiki.archlinux.org/index.php/Mirrors"
-  print_info "This option is a guide to selecting and configuring your mirrors, and a listing of current available mirrors."
-  OPTION=n
-  while [[ $OPTION != y ]]; do
-    country_list
-    read_input_text "Confirm country: $country_name"
-  done
-  chmod +r /etc/pacman.d/mirrorlist
-  $EDITOR /etc/pacman.d/mirrorlist
-}
-#}}}
+
 #UMOUNT PARTITIONS {{{
 umount_partitions(){
   mounted_partitions=(`lsblk | grep ${MOUNTPOINT} | awk '{print $7}' | sort -r`)
@@ -110,7 +86,7 @@ select_device(){
 create_partition_scheme(){
   LUKS=0
   LVM=0
-  print_title "https://wiki.archlinux.org/index.php/Partitioning"
+  print_title "PARTITION DRIVE - ${WIKI}/Partitioning"
   print_info "Partitioning a hard drive allows one to logically divide the available space into sections that can be accessed independently of one another."
   print_warning "Maintain Current does not work with LUKS"
   partition_layout=("Default" "LVM" "LVM+LUKS" "Maintain Current")
@@ -168,7 +144,7 @@ create_partition(){
 #}}}
 #SETUP LUKS {{{
 setup_luks(){
-  print_title "LUKS - https://wiki.archlinux.org/index.php/LUKS"
+  print_title "LUKS - ${WIKI}/LUKS"
   print_info "The Linux Unified Key Setup or LUKS is a disk-encryption specification created by Clemens Fruhwirth and originally intended for Linux."
   print_danger "\tDo not use this for boot partitions"
   block_list=(`lsblk | grep 'part' | awk '{print "/dev/" substr($1,3)}'`)
@@ -191,7 +167,7 @@ setup_luks(){
 #}}}
 #SETUP LVM {{{
 setup_lvm(){
-  print_title "LVM - https://wiki.archlinux.org/index.php/LVM"
+  print_title "LVM - ${WIKI}/LVM"
   print_info "LVM is a logical volume manager for the Linux kernel; it manages disk drives and similar mass-storage devices. "
   print_warning "Last partition will take 100% of free space left"
   if [[ $LUKS -eq 1 ]]; then
@@ -228,7 +204,7 @@ setup_lvm(){
 #}}}
 #SELECT|FORMAT PARTITIONS {{{
 format_partitions(){
-  print_title "https://wiki.archlinux.org/index.php/File_Systems"
+  print_title "FILESYSTEMS - ${WIK}/File_Systems"
   print_info "This step will select and format the selected partiton where the archlinux will be installed"
   print_danger "\tAll data on the ROOT and SWAP partition will be LOST."
   i=0
@@ -426,7 +402,7 @@ format_partitions(){
 #}}}
 #INSTALL ARCHBANG {{{
 install_archbang(){
-  print_title "INSTALL SYSTEM"
+  print_title "INSTALL ARCHBANG - www.archbang.org"
   print_info "Installing please wait..."
   echo
   # copy source to new install
@@ -480,13 +456,8 @@ configure_keymap(){
 #}}}
 #CONFIGURE FSTAB {{{
 configure_fstab(){
-  print_title "FSTAB - https://wiki.archlinux.org/index.php/Fstab"
+  print_title "FSTAB - ${WIKI}/Fstab"
   print_info "The /etc/fstab file contains static filesystem information."
-  if [[ ! -f ${MOUNTPOINT}/etc/fstab.aui ]]; then
-    cp ${MOUNTPOINT}/etc/fstab ${MOUNTPOINT}/etc/fstab.aui
-  else
-    cp ${MOUNTPOINT}/etc/fstab.aui ${MOUNTPOINT}/etc/fstab
-  fi
   if [[ $UEFI -eq 1 ]]; then
     fstab_list=("DEV" "PARTUUID" "LABEL");
   else
@@ -517,7 +488,7 @@ configure_fstab(){
 #}}}
 #CONFIGURE HOSTNAME {{{
 configure_hostname(){
-  print_title "HOSTNAME - https://wiki.archlinux.org/index.php/HOSTNAME"
+  print_title "HOSTNAME - ${WIKI}/hostname"
   print_info "A host name is a unique name created to identify a machine on a network.Host names are restricted to alphanumeric characters.\nThe hyphen (-) can be used, but a host name cannot start or end with it. Length is restricted to 63 characters."
   read -p "Hostname [ex: archlinux]: " host_name
   echo "$host_name" > ${MOUNTPOINT}/etc/hostname
@@ -532,7 +503,7 @@ configure_hostname(){
 #}}}
 #CONFIGURE TIMEZONE {{{
 configure_timezone(){
-  print_title "TIMEZONE - https://wiki.archlinux.org/index.php/Timezone"
+  print_title "TIMEZONE - ${WIKI}/Timezone"
   print_info "In an operating system the time (clock) is determined by four parts: Time value, Time standard, Time Zone, and DST (Daylight Saving Time if applicable)."
   OPTION=n
   while [[ $OPTION != y ]]; do
@@ -544,7 +515,7 @@ configure_timezone(){
 #}}}
 #CONFIGURE HARDWARECLOCK {{{
 configure_hardwareclock(){
-  print_title "HARDWARE CLOCK TIME - https://wiki.archlinux.org/index.php/Internationalization"
+  print_title "HARDWARE CLOCK TIME - ${WIKI}/Internationalization"
   print_info "This is set in /etc/adjtime. Set the hardware clock mode uniformly between your operating systems on the same machine. Otherwise, they will overwrite the time and cause clock shifts (which can cause time drift correction to be miscalibrated)."
   hwclock_list=('UTC' 'Localtime');
   PS3="$prompt1"
@@ -562,7 +533,7 @@ configure_hardwareclock(){
 #}}}
 #CONFIGURE LOCALE {{{
 configure_locale(){
-  print_title "LOCALE - https://wiki.archlinux.org/index.php/Locale"
+  print_title "LOCALE - ${WIKI}/Locale"
   print_info "Locales are used in Linux to define which language the user uses. As the locales define the character sets being used as well, setting up the correct locale is especially important if the language contains non-ASCII characters."
   OPTION=n
   while [[ $OPTION != y ]]; do
@@ -576,7 +547,7 @@ configure_locale(){
 #}}}
 #CONFIGURE MKINITCPIO {{{
 configure_mkinitcpio(){
-  print_title "MKINITCPIO - https://wiki.archlinux.org/index.php/Mkinitcpio"
+  print_title "MKINITCPIO - ${WIKI}/Mkinitcpio"
   print_info "mkinitcpio is a Bash script used to create an initial ramdisk environment."
   [[ $LUKS -eq 1 ]] && sed -i '/^HOOK/s/block/block keymap encrypt/' ${MOUNTPOINT}/etc/mkinitcpio.conf
   [[ $LVM -eq 1 ]] && sed -i '/^HOOK/s/filesystems/lvm2 filesystems/' ${MOUNTPOINT}/etc/mkinitcpio.conf
@@ -585,7 +556,7 @@ configure_mkinitcpio(){
 #}}}
 #INSTALL BOOTLOADER {{{
 install_bootloader(){
-  print_title "BOOTLOADER - https://wiki.archlinux.org/index.php/Bootloader"
+  print_title "BOOTLOADER - ${WIKI}/Bootloader"
   print_info "The boot loader is responsible for loading the kernel and initial RAM disk before initiating the boot process."
   print_warning "\tROOT Partition: ${ROOT_MOUNTPOINT}"
   if [[ $UEFI -eq 1 ]]; then
@@ -625,7 +596,7 @@ install_bootloader(){
 configure_bootloader(){
   case $bootloader in
     Grub2)
-      print_title "GRUB2 - https://wiki.archlinux.org/index.php/GRUB2"
+      print_title "GRUB2 - £{WIKI}/GRUB2"
       print_info "GRUB2 is the next generation of the GRand Unified Bootloader (GRUB).\nIn brief, the bootloader is the first software program that runs when a computer starts. It is responsible for loading and transferring control to the Linux kernel."
       grub_install_mode=("Automatic" "Manual")
       PS3="$prompt1"
@@ -655,7 +626,7 @@ configure_bootloader(){
       arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
       ;;
     Syslinux)
-      print_title "SYSLINUX - https://wiki.archlinux.org/index.php/Syslinux"
+      print_title "SYSLINUX - ${WIKI}/Syslinux"
       print_info "Syslinux is a collection of boot loaders capable of booting from hard drives, CDs, and over the network via PXE. It supports the fat, ext2, ext3, ext4, and btrfs file systems."
       syslinux_install_mode=("[MBR] Automatic" "[PARTITION] Automatic" "Manual")
       PS3="$prompt1"
@@ -704,7 +675,7 @@ configure_bootloader(){
       done
       ;;
     Systemd)
-      print_title "SYSTEMD-BOOT - https://wiki.archlinux.org/index.php/Systemd-boot"
+      print_title "SYSTEMD-BOOT - ${WIKI}/Systemd-boot"
       print_info "systemd-boot (previously called gummiboot), is a simple UEFI boot manager which executes configured EFI images. The default entry is selected by a configured pattern (glob) or an on-screen menu. It is included with systemd since systemd 220-2."
       print_warning "\tSystemd-boot heavily suggests that /boot is mounted to the EFI partition, not /boot/efi, in order to simplify updating and configuration."
       gummiboot_install_mode=("Automatic" "Manual")
@@ -781,19 +752,17 @@ check_boot_system
 while true
 do
   print_title "ArchBang installer - www.archbang.org"
-  echo " 1) $(mainmenu_item "${checklist[2]}" "Editor")"
-  echo " 2) $(mainmenu_item "${checklist[3]}" "Mirrorlist")"
-  echo " 3) $(mainmenu_item "${checklist[4]}" "Partition Scheme")"
-  echo " 4) $(mainmenu_item "${checklist[5]}" "Install ArchBang")"
-  echo " 5) $(mainmenu_item "${checklist[6]}" "Fstab")"
-  echo " 6) $(mainmenu_item "${checklist[7]}" "Hostname")"
-  echo " 7) $(mainmenu_item "${checklist[8]}" "Timezone")"
-  echo " 8) $(mainmenu_item "${checklist[9]}" "Hardware Clock")"
-  echo " 9) $(mainmenu_item "${checklist[10]}" "Locale")"
-  echo "10) $(mainmenu_item "${checklist[11]}" "Mkinitcpio")"
-  echo "11) $(mainmenu_item "${checklist[12]}" "Bootloader")"
-  echo "12) $(mainmenu_item "${checklist[13]}" "Root Password")"
-  echo "13) $(mainmenu_item "${checklist[13]}" "Setup New User")"
+  echo " 1) $(mainmenu_item "${checklist[1]}" "Editor")"
+  echo " 2) $(mainmenu_item "${checklist[2]}" "Partition Scheme")"
+  echo " 3) $(mainmenu_item "${checklist[3]}" "Install ArchBang")"
+  echo " 4) $(mainmenu_item "${checklist[4]}" "Fstab")"
+  echo " 5) $(mainmenu_item "${checklist[5]}" "Hostname")"
+  echo " 6) $(mainmenu_item "${checklist[6]}" "Timezone")"
+  echo " 7) $(mainmenu_item "${checklist[7]}" "Hardware Clock")"
+  echo " 8) $(mainmenu_item "${checklist[8]}" "Locale")"
+  echo " 9) $(mainmenu_item "${checklist[9]}" "Bootloader")"
+  echo "10) $(mainmenu_item "${checklist[10]}" "Root Password")"
+  echo "11) $(mainmenu_item "${checklist[11]}" "Setup New User")"
 
   echo ""
   echo " d) Done"
@@ -806,57 +775,50 @@ do
         checklist[1]=1
         ;;
       2)
-        configure_mirrorlist
-        checklist[2]=1
-        ;;
-      3)
         umount_partitions
         create_partition_scheme
         format_partitions
-        checklist[3]=1
+        checklist[2]=1
         ;;
-      4)
+      3)
         install_archbang
         configure_keymap
         setup_alt_dns
+        checklist[3]=1
+        ;;
+      4)
+        configure_fstab
         checklist[4]=1
         ;;
       5)
-        configure_fstab
+        configure_hostname
         checklist[5]=1
         ;;
       6)
-        configure_hostname
+        configure_timezone
         checklist[6]=1
         ;;
       7)
-        configure_timezone
+        configure_hardwareclock
         checklist[7]=1
         ;;
       8)
-        configure_hardwareclock
+        configure_locale
+		configure_mkinitcpio
         checklist[8]=1
         ;;
       9)
-        configure_locale
+        install_bootloader
+        configure_bootloader
         checklist[9]=1
         ;;
       10)
-        configure_mkinitcpio
+        root_password
         checklist[10]=1
         ;;
       11)
-        install_bootloader
-        configure_bootloader
-        checklist[11]=1
-        ;;
-      12)
-        root_password
-        checklist[12]=1
-        ;;
-      13)
         setup_user
-        checklist[13]=1
+        checklist[11]=1
         ;;
       "d")
         finish
