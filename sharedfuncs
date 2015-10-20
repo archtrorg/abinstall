@@ -315,7 +315,7 @@
   }
   #}}}
   settimezone() { #{{{
-    local _zones=($(timedatectl list-timezone | sed 's/\/.*$//' | uniq`)
+    local _zones=($(timedatectl list-timezones | sed 's/\/.*$//' | uniq`)
     PS3="$prompt1"
     echo "Select zone:"
     select ZONE in "${_zones[@]}"; do
