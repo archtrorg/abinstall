@@ -12,4 +12,4 @@ done create variable for wiki links....
 
 done remove mkinitcpio
 
-fstab? UUID
+done fstab? UUID

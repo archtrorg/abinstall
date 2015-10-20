@@ -67,15 +67,14 @@
     BOOT_MOUNTPOINT="/dev/sda"
     MOUNTPOINT="/mnt"
   #}}}
-  ARCHI=`uname -m` # ARCHITECTURE
+  ARCHI=$(uname -m)
   UEFI=0
   LVM=0
   LUKS=0
   LUKS_DISK="sda2"
-  AUR=`echo -e "(${BPurple}aur${Reset})"`
   EXTERNAL=`echo -e "(${BYellow}external${Reset})"`
-  AUI_DIR=`pwd` #CURRENT DIRECTORY
   [[ $1 == -v || $1 == --verbose ]] && VERBOSE_MODE=1 || VERBOSE_MODE=0 # VERBOSE MODE
+  AUI_DIR=`pwd` #CURRENT DIRECTORY
   LOG="${AUI_DIR}/`basename ${0}`_error.log" # LOG FILE
   [[ -f $LOG ]] && rm -f $LOG
   PKG=""
@@ -164,24 +163,6 @@
   check_hostname() { #{{{
     if [[ `echo ${HOSTNAME} | sed 's/ //g'` == "" ]]; then
       error_msg "ERROR! Hostname is not configured."
-    fi
-  } #}}}
-  check_pacman_blocked() { #{{{
-    if [[ -f /var/lib/pacman/db.lck ]]; then
-      error_msg "ERROR! Pacman is blocked. \nIf not running remove /var/lib/pacman/db.lck."
-    fi
-  } #}}}
-  check_domainname() { #{{{
-    local _domainname=`echo ${HOSTNAME} | cut -d'.' -f2- | sed 's/ //g'`
-
-    # no domain name. Keep looking...
-    if [[ "${_domainname}" == "" ]]; then
-      _domainname=`grep domain /etc/resolv.conf | sed 's/domain //g' | sed 's/ //g'`
-    fi
-
-    # not founded...
-    if [[ "${_domainname}" == "" ]]; then
-      error_msg "ERROR! Domain name is not configured."
     fi
   } #}}}
   read_input() { #{{{
@@ -307,7 +288,7 @@
   }
   #}}}
   getkeymap() { #{{{
-    local _keymaps=(`localectl list-keymaps`)
+    local _keymaps=($(localectl list-keymaps))
     PS3="(shift+pgup/pgdown) $prompt1"
     echo "Select keymap:"
     select KEYMAP in "${_keymaps[@]}"; do
@@ -334,7 +315,7 @@
   }
   #}}}
   settimezone() { #{{{
-    local _zones=(`timedatectl list-timezones | sed 's/\/.*$//' | uniq`)
+    local _zones=($(timedatectl list-timezone | sed 's/\/.*$//' | uniq`)
     PS3="$prompt1"
     echo "Select zone:"
     select ZONE in "${_zones[@]}"; do

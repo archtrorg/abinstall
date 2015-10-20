@@ -454,38 +454,17 @@ configure_keymap(){
   echo "KEYMAP=$KEYMAP" > ${MOUNTPOINT}/etc/vconsole.conf
 }
 #}}}
+
 #CONFIGURE FSTAB {{{
 configure_fstab(){
-  print_title "FSTAB - ${WIKI}/Fstab"
-  print_info "The /etc/fstab file contains static filesystem information."
   if [[ $UEFI -eq 1 ]]; then
-    fstab_list=("DEV" "PARTUUID" "LABEL");
+    genfstab -t PARTUUID -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab
   else
-    fstab_list=("DEV" "UUID" "LABEL");
+    genfstab -U -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab
   fi
-
-  PS3="$prompt1"
-  echo -e "Configure fstab based on:"
-  select OPT in "${fstab_list[@]}"; do
-    case "$REPLY" in
-      1) genfstab -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab ;;
-      2) if [[ $UEFI -eq 1 ]]; then
-          genfstab -t PARTUUID -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab
-         else
-          genfstab -U -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab
-         fi
-         ;;
-      3) genfstab -L -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab ;;
-      *) invalid_option ;;
-    esac
-    [[ -n $OPT ]] && break
-  done
-  echo "Review your fstab"
-  [[ -f ${MOUNTPOINT}/swapfile ]] && sed -i "s/\\${MOUNTPOINT}//" ${MOUNTPOINT}/etc/fstab
-  pause_function
-  $EDITOR ${MOUNTPOINT}/etc/fstab
 }
 #}}}
+
 #CONFIGURE HOSTNAME {{{
 configure_hostname(){
   print_title "HOSTNAME - ${WIKI}/hostname"
@@ -755,14 +734,13 @@ do
   echo " 1) $(mainmenu_item "${checklist[1]}" "Editor")"
   echo " 2) $(mainmenu_item "${checklist[2]}" "Partition Scheme")"
   echo " 3) $(mainmenu_item "${checklist[3]}" "Install ArchBang")"
-  echo " 4) $(mainmenu_item "${checklist[4]}" "Fstab")"
-  echo " 5) $(mainmenu_item "${checklist[5]}" "Hostname")"
-  echo " 6) $(mainmenu_item "${checklist[6]}" "Timezone")"
-  echo " 7) $(mainmenu_item "${checklist[7]}" "Hardware Clock")"
-  echo " 8) $(mainmenu_item "${checklist[8]}" "Locale")"
-  echo " 9) $(mainmenu_item "${checklist[9]}" "Bootloader")"
-  echo "10) $(mainmenu_item "${checklist[10]}" "Root Password")"
-  echo "11) $(mainmenu_item "${checklist[11]}" "Setup New User")"
+  echo " 4) $(mainmenu_item "${checklist[4]}" "Hostname")"
+  echo " 5) $(mainmenu_item "${checklist[5]}" "Timezone")"
+  echo " 6) $(mainmenu_item "${checklist[6]}" "Hardware Clock")"
+  echo " 7) $(mainmenu_item "${checklist[7]}" "Locale")"
+  echo " 8) $(mainmenu_item "${checklist[8]}" "Bootloader")"
+  echo " 9) $(mainmenu_item "${checklist[9]}" "Root Password")"
+  echo "10) $(mainmenu_item "${checklist[10]}" "Create User")"
 
   echo ""
   echo " d) Done"
@@ -783,42 +761,38 @@ do
       3)
         install_archbang
         configure_keymap
-        setup_alt_dns
+		confgiure_fstab
         checklist[3]=1
         ;;
       4)
-        configure_fstab
+        configure_hostname
         checklist[4]=1
         ;;
       5)
-        configure_hostname
+        configure_timezone
         checklist[5]=1
         ;;
       6)
-        configure_timezone
+        configure_hardwareclock
         checklist[6]=1
         ;;
       7)
-        configure_hardwareclock
+        configure_locale
+		configure_mkinitcpio
         checklist[7]=1
         ;;
       8)
-        configure_locale
-		configure_mkinitcpio
+        install_bootloader
+        configure_bootloader
         checklist[8]=1
         ;;
       9)
-        install_bootloader
-        configure_bootloader
+        root_password
         checklist[9]=1
         ;;
       10)
-        root_password
-        checklist[10]=1
-        ;;
-      11)
         setup_user
-        checklist[11]=1
+        checklist[10]=1
         ;;
       "d")
         finish
