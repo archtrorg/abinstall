@@ -406,7 +406,7 @@ install_archbang(){
   print_info "Installing please wait..."
   echo
   # copy source to new install
-  AIROOTFS="/run/archiso/sys/airootfs/"
+  AIROOTFS="/run/archiso/sfs/airootfs/"
   NOF=$(df -i ${AIROOTFS} | wc -l)
   rsync -a --progress $AIROOTFS $MOUNTPOINT/ | pv -les $NOF 2>/tmp/inst_log
 
