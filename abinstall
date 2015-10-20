@@ -546,15 +546,15 @@ install_bootloader(){
     bootloaders_list=("Grub2" "Syslinux" "Skip")
   fi
   PS3="$prompt1"
-  echo -e "Install bootloader:\n"
+  echo -e "Select bootloader:\n"
   select bootloader in "${bootloaders_list[@]}"; do
     case "$REPLY" in
       1)
-        pacstrap ${MOUNTPOINT} grub os-prober
+        echo "Grub2"
         break
         ;;
       2)
-        pacstrap ${MOUNTPOINT} syslinux gptfdisk
+        echo "Syslinux"
         break
         ;;
       3)
@@ -568,7 +568,6 @@ install_bootloader(){
         ;;
     esac
   done
-  [[ $UEFI -eq 1 ]] && pacstrap ${MOUNTPOINT} efibootmgr dosfstools
 }
 #}}}
 #CONFIGURE BOOTLOADER {{{
@@ -782,7 +781,7 @@ do
         checklist[7]=1
         ;;
       8)
-        install_bootloader
+        install_bootloader # will become select (make it part of configure_bootloader)
         configure_bootloader
         checklist[8]=1
         ;;
