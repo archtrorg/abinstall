@@ -408,7 +408,7 @@ install_archbang(){
   # copy source to new install
   AIROOTFS="/run/archiso/sfs/airootfs/"
   NOF=$(df -i ${AIROOTFS} | wc -l)
-  rsync -a --progress $AIROOTFS $MOUNTPOINT/ | pv -les $NOF 2>/tmp/inst_log
+  rsync -a --progress $AIROOTFS $MOUNTPOINT/ | pv -lep -s $NOF 2>/tmp/inst_log
 
   # add mirrorlist or modify post install?
   cp /etc/pacman.d/mirrorlist $MOUNTPOINT/etc/pacman.d
