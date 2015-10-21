@@ -408,15 +408,15 @@ install_archbang(){
   # copy source to new install
   AIROOTFS="/run/archiso/sfs/airootfs/"
   NOF=$(df -i ${AIROOTFS} | wc -l)
-  rsync -a --progress $AIROOTFS $MOUNTPOINT/ | pv -lep -s $NOF 2>/tmp/inst_log
+  rsync -a --progress $AIROOTFS $MOUNTPOINT/ | pv -lep -s ${NOF}
 
   # add mirrorlist or modify post install?
   cp /etc/pacman.d/mirrorlist $MOUNTPOINT/etc/pacman.d
-  # remove abinstall from openbox me
+  # remove abinstall from openbox menu
   sed -i '/Install/,+2d' $MOUNTPOINT/home/ablive/.config/openbox/menu.xml
 
   # set xkeyboard map
-  #sed -i "s/us/${KEYMAP_XKB:0:2}/g" $DESTDIR/etc/X11/xorg.conf.d/01-keyboard-layout.conf
+  #sed -i "s/us/${KEYMAP_XKB:0:2}/g" $MOUNTPOINT/etc/X11/xorg.conf.d/01-keyboard-layout.conf
 
   # add in password again for sudo
   sed -i '/^%wheel/s/NOPASSWD://g' $MOUNTPOINT/etc/sudoers
@@ -442,6 +442,10 @@ install_archbang(){
   # systemd
   rm ${MOUNTPOINT}/etc/systemd/system/default.target &> /dev/null
   sed -i 's/volatile/auto/g' /${MOUNTPOINT}/etc/systemd/journald.conf
+  # stop pacman-init
+  arch_chroot systemctl disable pacman-init.service || true
+  rm $MOUNTPOINT/etc/systemd/system/pacman-init.service
+  rm $MOUNTPOINT/etc/systemd/system/etc-pacman.d-gnupg.mount
 
 }
 #}}}
@@ -632,7 +636,8 @@ configure_bootloader(){
             elif [[ $LVM -eq 1 ]]; then
               sed -i "s/sda[0-9]/\/dev\/mapper\/${ROOT_PART}/g" ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
             else
-              sed -i "s/sda[0-9]/${ROOT_PART}/g" ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
+         
+     sed -i "s/sda[0-9]/${ROOT_PART}/g" ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
             fi
             print_warning "The partition in question needs to be whatever you have as / (root), not /boot."
             pause_function
