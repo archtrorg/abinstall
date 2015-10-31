@@ -32,7 +32,7 @@ WIKI="https://wiki.archlinux.org/index.php"
 #SELECT KEYMAP {{{
 select_keymap(){
   print_title "KEYMAP - ${WIKI}/KEYMAP"
-  print_info "The KEYMAP variable is specified in the /etc/rc.conf file. It defines what keymap the keyboard is in the virtual consoles. Keytable files are provided by the kbd package."
+  print_info "The KEYMAP variable defines what keymap the keyboard is in the virtual consoles. Keytable files are provided by the kbd package."
   OPTION=n
   while [[ $OPTION != y ]]; do
     getkeymap
@@ -407,7 +407,7 @@ install_archbang(){
   echo
   # copy source to new install
   AIROOTFS="/run/archiso/sfs/airootfs/"
-  NOF=$(df -i ${AIROOTFS} | wc -l)
+  NOF=$(ls ${AIROOTFS} | wc -l)
   rsync -a --progress $AIROOTFS $MOUNTPOINT/ | pv -lep -s ${NOF} > /dev/null
 
   # add mirrorlist or modify post install?
@@ -517,7 +517,7 @@ configure_hardwareclock(){
 #CONFIGURE LOCALE {{{
 configure_locale(){
   print_title "LOCALE - ${WIKI}/Locale"
-  print_info "Locales are used in Linux to define which language the user uses. As the locales define the character sets being used as well, setting up the correct locale is especially important if the language contains non-ASCII characters."
+  print_info "Locales are used in Linux to define which language the user uses. As the locales define the character sets being used as well."
   OPTION=n
   while [[ $OPTION != y ]]; do
     setlocale
@@ -578,7 +578,7 @@ install_bootloader(){
 configure_bootloader(){
   case $bootloader in
     Grub2)
-      print_title "GRUB2 - £{WIKI}/GRUB2"
+      print_title "GRUB2 - ${WIKI}/GRUB2"
       print_info "GRUB2 is the next generation of the GRand Unified Bootloader (GRUB).\nIn brief, the bootloader is the first software program that runs when a computer starts. It is responsible for loading and transferring control to the Linux kernel."
       grub_install_mode=("Automatic" "Manual")
       PS3="$prompt1"
@@ -636,19 +636,11 @@ configure_bootloader(){
             elif [[ $LVM -eq 1 ]]; then
               sed -i "s/sda[0-9]/\/dev\/mapper\/${ROOT_PART}/g" ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
             else
-         
-     sed -i "s/sda[0-9]/${ROOT_PART}/g" ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
+              sed -i "s/sda[0-9]/${ROOT_PART}/g" ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
             fi
             print_warning "The partition in question needs to be whatever you have as / (root), not /boot."
             pause_function
             $EDITOR ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
-            break
-            ;;
-          3)
-            print_info "Your boot partition, on which you plan to install Syslinux, must contain a FAT, ext2, ext3, ext4, or Btrfs file system. You should install it on a mounted directory, not a /dev/sdXY partition. You do not have to install it on the root directory of a file system, e.g., with partition /dev/sda1 mounted on /boot you can install Syslinux in the syslinux directory"
-            echo -e $prompt3
-            print_warning "mkdir /boot/syslinux\nextlinux --install /boot/syslinux "
-            arch-chroot ${MOUNTPOINT}
             break
             ;;
           *)
@@ -659,7 +651,7 @@ configure_bootloader(){
       ;;
     Systemd)
       print_title "SYSTEMD-BOOT - ${WIKI}/Systemd-boot"
-      print_info "systemd-boot (previously called gummiboot), is a simple UEFI boot manager which executes configured EFI images. The default entry is selected by a configured pattern (glob) or an on-screen menu. It is included with systemd since systemd 220-2."
+      print_info "systemd-boot (previously called gummiboot), is a simple UEFI boot manager which executes configured EFI images."
       print_warning "\tSystemd-boot heavily suggests that /boot is mounted to the EFI partition, not /boot/efi, in order to simplify updating and configuration."
       gummiboot_install_mode=("Automatic" "Manual")
       PS3="$prompt1"
