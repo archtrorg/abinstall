@@ -50,11 +50,7 @@
   #}}}
   # EDITOR {{{
     AUTOMATIC_MODE=0
-    if [[ -f /usr/bin/vim ]]; then
-      EDITOR="vim"
-    elif [[ -z $EDITOR ]]; then
-      EDITOR="nano"
-    fi
+    EDITOR="nano"
   #}}}
   # DESKTOP ENVIRONMENT{{{
     CINNAMON=0
@@ -302,11 +298,11 @@
   #}}}
 
  getxkeymap() { #{{{
-    local _keymaps=($(localectl list-x11-keymap-layouts))
+    local _xkeymaps=($(localectl list-x11-keymap-layouts))
     PS3="(shift+pgup/pgdown) $prompt1"
     echo "Select keymap:"
-    select KEYMAP in "${_keymaps[@]}"; do
-      if contains_element "$KEYMAP" "${_keymaps[@]}"; then
+    select XKEYMAP in "${_xkeymaps[@]}"; do
+      if contains_element "$XKEYMAP" "${_xkeymaps[@]}"; then
         break
       else
         invalid_option

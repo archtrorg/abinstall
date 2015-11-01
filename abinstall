@@ -30,31 +30,15 @@ WIKI="https://wiki.archlinux.org/index.php"
 
 #ARCHLINUX INSTALL SCRIPTS MODE {{{
 #SELECT KEYMAP {{{
-select_keymap(){
-  print_title "KEYMAP - ${WIKI}/KEYMAP"
-  print_info "The KEYMAP variable defines what keymap the keyboard is in the virtual consoles. Keytable files are provided by the kbd package."
+select_xkeymap(){
+  print_title "XORG DESKTOP KEYBOARD LAYOUT"
+  print_info "."
   OPTION=n
   while [[ $OPTION != y ]]; do
-    getkeymap
-    read_input_text "Confirm keymap: $KEYMAP"
+    getxkeymap
+    read_input_text "Confirm keymap: $XKEYMAP"
   done
-  loadkeys $KEYMAP
-}
-#}}}
-#DEFAULT EDITOR {{{
-select_editor(){
-  print_title "DEFAULT EDITOR"
-  editors_list=( "nano" "vi" "geany");
-  PS3="$prompt1"
-  echo -e "Select editor\n"
-  select EDITOR in "${editors_list[@]}"; do
-    if contains_element "$EDITOR" "${editors_list[@]}"; then
-      package_install "$EDITOR"
-      break
-    else
-      invalid_option
-    fi
-  done
+ # add it too xorg file .... via sed here $XKEYMAP
 }
 #}}}
 
@@ -727,13 +711,13 @@ check_boot_system
 while true
 do
   print_title "ArchBang installer - www.archbang.org"
-  echo " 1) $(mainmenu_item "${checklist[1]}" "Editor")"
-  echo " 2) $(mainmenu_item "${checklist[2]}" "Partition Scheme")"
-  echo " 3) $(mainmenu_item "${checklist[3]}" "Install ArchBang")"
-  echo " 4) $(mainmenu_item "${checklist[4]}" "Hostname")"
-  echo " 5) $(mainmenu_item "${checklist[5]}" "Timezone")"
-  echo " 6) $(mainmenu_item "${checklist[6]}" "Hardware Clock")"
-  echo " 7) $(mainmenu_item "${checklist[7]}" "Locale")"
+  echo " 1) $(mainmenu_item "${checklist[1]}" "Partition Scheme")"
+  echo " 2) $(mainmenu_item "${checklist[2]}" "Install ArchBang")"
+  echo " 3) $(mainmenu_item "${checklist[3]}" "Hostname")"
+  echo " 4) $(mainmenu_item "${checklist[4]}" "Timezone")"
+  echo " 5) $(mainmenu_item "${checklist[5]}" "Hardware Clock")"
+  echo " 6) $(mainmenu_item "${checklist[6]}" "Locale")"
+  echo " 7) $(mainmenu_item "${checklist[7]}" "Desktop Keyboard Layout")"
   echo " 8) $(mainmenu_item "${checklist[8]}" "Bootloader")"
   echo " 9) $(mainmenu_item "${checklist[9]}" "Root Password")"
   echo "10) $(mainmenu_item "${checklist[10]}" "Create User")"
@@ -745,38 +729,37 @@ do
   for OPT in ${OPTIONS[@]}; do
     case "$OPT" in
       1)
-        select_editor
-        checklist[1]=1
-        ;;
-      2)
         umount_partitions
         create_partition_scheme
         format_partitions
+        checklist[1]=1
+        ;;
+      2)
+        install_archbang
+		confgiure_fstab
         checklist[2]=1
         ;;
       3)
-        install_archbang
-        configure_keymap
-		confgiure_fstab
+        configure_hostname
         checklist[3]=1
         ;;
       4)
-        configure_hostname
+        configure_timezone
         checklist[4]=1
         ;;
       5)
-        configure_timezone
+        configure_hardwareclock
         checklist[5]=1
         ;;
       6)
-        configure_hardwareclock
+        configure_locale
+		configure_mkinitcpio
         checklist[6]=1
         ;;
       7)
-        configure_locale
-		configure_mkinitcpio
-        checklist[7]=1
-        ;;
+		select_xkeymap
+		checklist[7]=1
+		;;
       8)
         install_bootloader # will become select (make it part of configure_bootloader)
         configure_bootloader
