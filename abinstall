@@ -391,16 +391,13 @@ install_archbang(){
   echo
   # copy source to new install
   AIROOTFS="/run/archiso/sfs/airootfs/"
-  NOF=$(ls ${AIROOTFS} | wc -l)
+  NOF=$(find ${AIROOTFS} | wc -l)
   rsync -a --progress $AIROOTFS $MOUNTPOINT/ | pv -lep -s ${NOF} > /dev/null
 
   # add mirrorlist or modify post install?
   cp /etc/pacman.d/mirrorlist $MOUNTPOINT/etc/pacman.d
   # remove abinstall from openbox menu
   sed -i '/Install/,+2d' $MOUNTPOINT/home/ablive/.config/openbox/menu.xml
-
-  # set xkeyboard map
-  #sed -i "s/us/${KEYMAP_XKB:0:2}/g" $MOUNTPOINT/etc/X11/xorg.conf.d/01-keyboard-layout.conf
 
   # add in password again for sudo
   sed -i '/^%wheel/s/NOPASSWD://g' $MOUNTPOINT/etc/sudoers
@@ -413,12 +410,8 @@ install_archbang(){
   # put live driver into new install
   cp /etc/X11/xorg.conf.d/20-gpudriver.conf ${MOUNTPOINT}/etc/X11/xorg.conf.d/20-gpudriver.conf &>/dev/null
 
-  # copy over new mirrorlist
-  cp /etc/pacman.d/mirrorlist ${MOUNTPOINT}/etc/pacman.d/mirrorlist
-
   # Clean up new install
   rm -f ${MOUNTPOINT}/usr/bin/abinstall &> /dev/null
-  rm -rf ${MOUNTPOINT}/vomi &> /dev/null
 
   # clean out archiso files from install
   find ${MOUNTPOINT}/usr/lib/initcpio -name archiso* -type f -exec rm '{}' \;
@@ -431,15 +424,6 @@ install_archbang(){
   rm $MOUNTPOINT/etc/systemd/system/pacman-init.service
   rm $MOUNTPOINT/etc/systemd/system/etc-pacman.d-gnupg.mount
 
-}
-#}}}
-
-
-#}}}
-#CONFIGURE KEYMAP {{{
-configure_keymap(){
-  #ADD KEYMAP TO THE NEW SETUP
-  echo "KEYMAP=$KEYMAP" > ${MOUNTPOINT}/etc/vconsole.conf
 }
 #}}}
 
@@ -456,14 +440,9 @@ configure_fstab(){
 #CONFIGURE HOSTNAME {{{
 configure_hostname(){
   print_title "HOSTNAME - ${WIKI}/hostname"
-  print_info "A host name is a unique name created to identify a machine on a network.Host names are restricted to alphanumeric characters.\nThe hyphen (-) can be used, but a host name cannot start or end with it. Length is restricted to 63 characters."
+  print_info "A host name is a unique name created to identify a machine on a network. Length is restricted to 63 characters."
   read -p "Hostname [ex: archlinux]: " host_name
   echo "$host_name" > ${MOUNTPOINT}/etc/hostname
-  if [[ ! -f ${MOUNTPOINT}/etc/hosts.aui ]]; then
-    cp ${MOUNTPOINT}/etc/hosts ${MOUNTPOINT}/etc/hosts.aui
-  else
-    cp ${MOUNTPOINT}/etc/hosts.aui ${MOUNTPOINT}/etc/hosts
-  fi
   arch_chroot "sed -i '/127.0.0.1/s/$/ '${host_name}'/' /etc/hosts"
   arch_chroot "sed -i '/::1/s/$/ '${host_name}'/' /etc/hosts"
 }
@@ -483,7 +462,7 @@ configure_timezone(){
 #CONFIGURE HARDWARECLOCK {{{
 configure_hardwareclock(){
   print_title "HARDWARE CLOCK TIME - ${WIKI}/Internationalization"
-  print_info "This is set in /etc/adjtime. Set the hardware clock mode uniformly between your operating systems on the same machine. Otherwise, they will overwrite the time and cause clock shifts (which can cause time drift correction to be miscalibrated)."
+  print_info "This is set in /etc/adjtime. (Warning can cause time drift correction to be miscalibrated)."
   hwclock_list=('UTC' 'Localtime');
   PS3="$prompt1"
   select OPT in "${hwclock_list[@]}"; do
@@ -501,7 +480,7 @@ configure_hardwareclock(){
 #CONFIGURE LOCALE {{{
 configure_locale(){
   print_title "LOCALE - ${WIKI}/Locale"
-  print_info "Locales are used in Linux to define which language the user uses. As the locales define the character sets being used as well."
+  print_info "Locales are used in Linux to define which language the user uses & character sets."
   OPTION=n
   while [[ $OPTION != y ]]; do
     setlocale
@@ -761,7 +740,7 @@ do
 		checklist[7]=1
 		;;
       8)
-        install_bootloader # will become select (make it part of configure_bootloader)
+        install_bootloader
         configure_bootloader
         checklist[8]=1
         ;;
