@@ -52,11 +52,6 @@
     AUTOMATIC_MODE=0
     EDITOR="nano"
   #}}}
-  # DESKTOP ENVIRONMENT{{{
-    CINNAMON=0
-    GNOME=0
-    KDE=0
-  #}}}
   # MOUNTPOINTS {{{
     EFI_MOUNTPOINT="/boot/efi"
     ROOT_MOUNTPOINT="/dev/sda1"
@@ -70,13 +65,7 @@
   LUKS_DISK="sda2"
   EXTERNAL=`echo -e "(${BYellow}external${Reset})"`
   [[ $1 == -v || $1 == --verbose ]] && VERBOSE_MODE=1 || VERBOSE_MODE=0 # VERBOSE MODE
-  AUI_DIR=`pwd` #CURRENT DIRECTORY
-  LOG="${AUI_DIR}/`basename ${0}`_error.log" # LOG FILE
   [[ -f $LOG ]] && rm -f $LOG
-  PKG=""
-  PKG_FAIL="${AUI_DIR}/`basename ${0}`_pkg_fail_list.log"
-  [[ -f $PKG_FAIL ]] && rm -f $PKG_FAIL
-  XPINGS=0 # CONNECTION CHECK
   SPIN="/-\|" #SPINNER POSITION
   AUTOMATIC_MODE=0
   TRIM=0
